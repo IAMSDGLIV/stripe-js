@@ -45,7 +45,7 @@ const stripePromise: Promise<StripeConstructor | null> = Promise.resolve().then(
         if (window.Stripe) {
           resolve(window.Stripe);
         } else {
-          reject(new Error('Failed to load Stripe.js'));
+          reject(new Error('Stripe.js not available'));
         }
       });
 
@@ -56,9 +56,18 @@ const stripePromise: Promise<StripeConstructor | null> = Promise.resolve().then(
   }
 );
 
+let loadCalled = false;
+
+stripePromise.catch((err) => {
+  if (!loadCalled) console.warn(err);
+});
+
 export const loadStripe = (
   ...args: Parameters<StripeConstructor>
-): Promise<StripeInstance | null> =>
-  stripePromise.then((maybeStripe) =>
+): Promise<StripeInstance | null> => {
+  loadCalled = true;
+
+  return stripePromise.then((maybeStripe) =>
     maybeStripe ? maybeStripe(...args) : null
   );
+};
